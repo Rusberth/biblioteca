@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar – {{ appbuilder.app_name }}</title>
+  <link href="{{ url_for('appbuilder.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/fontawesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/solid.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/v4-shims.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/biblioteca.css') }}" rel="stylesheet">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-art">
+      <div>
+        <h1>{{ appbuilder.app_name }}</h1>
+        <p>Libros, socios, préstamos y multas en un solo sistema.</p>
+        <p><a href="/catalogo/">Consultar el catálogo sin iniciar sesión</a></p>
+      </div>
+      <div class="estante" aria-hidden="true">
+        {% set titulos = ["Cien años de soledad", "Cosmos", "Rayuela", "Ficciones", "El principito", "Clean Code", "Sapiens",
+                          "Momo", "Pedro Páramo", "Trilce", "Meditaciones", "Álgebra", "El Aleph", "Don Quijote", "Ana Frank", "La República",
+                          "Cálculo", "Alicia", "El túnel", "Steve Jobs", "Flask", "Rimas"] %}
+        {% for t in titulos %}
+          <div class="lomo c{{ loop.index0 % 8 }}" style="height: {{ 150 + (loop.index * 37) % 120 }}px; width: {{ 30 + (loop.index * 13) % 22 }}px;">
+            <span>{{ t }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="login-form-wrap">
+      <form class="login-form" action="" method="post" name="login">
+        {{ form.hidden_tag() }}
+        <h3>Iniciar sesión</h3>
+        <p class="text-muted">Ingresa con tu usuario y contraseña.</p>
+        {% include 'appbuilder/flash.html' %}
+        <div class="form-group">
+          <label for="username">Usuario</label>
+          {{ form.username(class="form-control", autofocus=true, placeholder="tu usuario") }}
+          {% for error in form.errors.get('username', []) %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          {{ form.password(class="form-control", placeholder="••••••••") }}
+          {% for error in form.errors.get('password', []) %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+        <input class="btn btn-primary" type="submit" value="Entrar">
+      </form>
+    </div>
+  </div>
+</body>
+</html>

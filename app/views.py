@@ -1,17 +1,12 @@
 """Vistas CRUD, menú y lógica de préstamos de la biblioteca."""
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-
 from flask import flash, g, redirect, url_for
 from flask_appbuilder import ModelView, action
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from wtforms.validators import NumberRange
 
+from . import servicios
 from .extensions import appbuilder, db
 from .models import Autor, Categoria, Libro, Multa, Prestamo, Socio
-
-DIAS_PRESTAMO = 14        # plazo normal de un préstamo
-MULTA_POR_DIA = Decimal("1.00")  # Bs por día de retraso
 
 
 def si_no(valor):
@@ -85,6 +80,11 @@ class SocioView(ModelView):
     base_order = ("nombre", "asc")
     formatters_columns = {"activo": si_no}
 
+    @action("carnet", "Ver carnet", "", "fa-id-card", multiple=True, single=True)
+    def carnet(self, items):
+        item = items[0] if isinstance(items, (list, tuple)) else items
+        return redirect(url_for("CarnetView.carnet", pk=item.id))
+
 
 class PrestamoView(ModelView):
     datamodel = SQLAInterface(Prestamo)
@@ -106,16 +106,7 @@ class PrestamoView(ModelView):
     base_order = ("id", "desc")
 
     def pre_add(self, item):
-        libro = item.libro
-        if not libro.activo or libro.ejemplares_disponibles <= 0:
-            raise ValueError("No hay ejemplares disponibles de este libro")
-        if not item.socio.activo:
-            raise ValueError("El socio está inactivo")
-        item.fecha_prestamo = date.today()
-        item.fecha_limite = item.fecha_prestamo + timedelta(days=DIAS_PRESTAMO)
-        item.estado = "Activo"
-        item.usuario_id = g.user.id
-        libro.ejemplares_disponibles -= 1
+        servicios.preparar_prestamo(item, g.user.id)
 
     @action("devolver", "Registrar devolución", "¿Registrar la devolución?",
             "fa-undo", multiple=True, single=True)
@@ -129,19 +120,12 @@ class PrestamoView(ModelView):
         return redirect(url_for("PrestamoView.list"))
 
     def _devolver_uno(self, item):
-        if item.estado == "Devuelto":
-            flash(f"El préstamo #{item.id} ya fue devuelto.", "warning")
+        try:
+            retraso, multa = servicios.devolver_prestamo(item)
+        except ValueError as e:
+            flash(str(e), "warning")
             return
-        hoy = date.today()
-        item.fecha_devolucion = hoy
-        item.estado = "Devuelto"
-        item.libro.ejemplares_disponibles += 1
-        retraso = (hoy - item.fecha_limite).days
-        if retraso > 0:
-            multa = Multa(prestamo=item, monto=MULTA_POR_DIA * retraso,
-                          motivo=f"Retraso de {retraso} día(s)", pagada=False,
-                          fecha=datetime.now())
-            db.session.add(multa)
+        if multa:
             flash(f"Préstamo #{item.id} devuelto con retraso: multa de Bs {multa.monto}", "warning")
         else:
             flash(f"Préstamo #{item.id}: devolución registrada.", "success")
@@ -162,6 +146,19 @@ class MultaView(ModelView):
     formatters_columns = {"pagada": si_no}
     validators_columns = {"monto": [NumberRange(min=0, message="No puede ser negativo")]}
 
+    @action("pagar", "Marcar como pagada", "¿Marcar las multas seleccionadas como pagadas?",
+            "fa-check", multiple=True, single=True)
+    def pagar(self, items):
+        items = items if isinstance(items, (list, tuple)) else [items]
+        cobradas = 0
+        for multa in items:
+            if not multa.pagada:
+                multa.pagada = True
+                cobradas += 1
+        db.session.commit()
+        flash(f"{cobradas} multa(s) marcada(s) como pagada(s).", "success")
+        return redirect(url_for("MultaView.list"))
+
 
 
 appbuilder.add_view(LibroView, "Libros", icon="fa-book", category="Catálogo")
@@ -178,3 +175,6 @@ appbuilder.add_view(AsistenteView, "Asistente IA", icon="fa-comments", category=
 
 # Reportes (3 consultas con filtros)
 from . import reportes  # noqa: E402,F401
+
+# Rediseño: catálogo público, mostrador y carnet
+from . import catalogo, mostrador  # noqa: E402,F401

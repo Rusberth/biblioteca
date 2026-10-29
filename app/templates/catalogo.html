@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catálogo – {{ appbuilder.app_name }}</title>
+  <link href="{{ url_for('appbuilder.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/fontawesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/solid.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/v4-shims.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/biblioteca.css') }}" rel="stylesheet">
+</head>
+<body class="publico">
+  {% include "_publico_top.html" %}
+  <main class="contenedor">
+    <div class="page-head">
+      <div><h2>Catálogo de libros</h2><p>Consulta qué hay en la biblioteca y si está disponible.</p></div>
+    </div>
+    <div class="cat-layout">
+      <form class="filtros" method="get">
+        <h5>Filtros</h5>
+        <input type="hidden" name="q" value="{{ texto }}">
+        <div class="grupo"><b>Categoría</b>
+          {% for c in categorias %}
+            <label><input type="checkbox" name="categoria" value="{{ c.id }}" {% if c.id in cats %}checked{% endif %}>
+              <span class="dot c{{ c.id % 8 }}"></span>{{ c.nombre }}</label>
+          {% endfor %}
+        </div>
+        <div class="grupo"><b>Año de publicación</b>
+          <div class="anios">
+            <input class="form-control" type="number" name="desde" value="{{ desde }}" placeholder="Desde" aria-label="Año desde">
+            <input class="form-control" type="number" name="hasta" value="{{ hasta }}" placeholder="Hasta" aria-label="Año hasta">
+          </div>
+        </div>
+        <div class="grupo"><b>Disponibilidad</b>
+          <label><input type="checkbox" name="disponibles" value="1" {% if solo_disp %}checked{% endif %}> Solo con ejemplares</label>
+        </div>
+        <div class="acciones">
+          <button class="btn btn-primary btn-sm" type="submit">Aplicar</button>
+          <a class="btn btn-default btn-sm" href="/catalogo/">Limpiar</a>
+        </div>
+      </form>
+
+      <section>
+        <div class="resultados-top">
+          <form class="barra-buscar" method="get">
+            {% for c in cats %}<input type="hidden" name="categoria" value="{{ c }}">{% endfor %}
+            {% if solo_disp %}<input type="hidden" name="disponibles" value="1">{% endif %}
+            <input class="form-control" type="search" name="q" value="{{ texto }}" placeholder="Título, autor, ISBN o categoría" aria-label="Buscar">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </form>
+          <span class="text-muted">{{ total }} libro(s)</span>
+        </div>
+
+        {% from "_macros.html" import portada %}
+        <div class="libros-grid">
+          {% for l in libros %}
+            <a class="libro" href="/catalogo/libro/{{ l.id }}">
+              {{ portada(l) }}
+              <span class="t">{{ l.titulo }}</span>
+              <span class="a">{{ l.autor.nombre }}</span>
+              {% if l.ejemplares_disponibles > 0 %}<span class="chip chip-ok">Disponible</span>
+              {% else %}<span class="chip chip-bad">Sin ejemplares</span>{% endif %}
+            </a>
+          {% else %}
+            <p class="text-muted">No hay libros con esos filtros. Prueba quitar alguno.</p>
+          {% endfor %}
+        </div>
+
+        {% if paginas > 1 %}
+          <div style="margin-top:22px;">
+            {% for n in range(1, paginas + 1) %}
+              <a class="btn btn-sm {% if n == pagina %}btn-primary{% else %}btn-default{% endif %}"
+                 href="?{% for k, v in args %}{{ k }}={{ v | urlencode }}&{% endfor %}pagina={{ n }}">{{ n }}</a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</body>
+</html>

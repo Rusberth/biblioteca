@@ -1,0 +1,11 @@
+<header class="topbar">
+  <a class="brand" href="/catalogo/"><span class="logo"><i class="fa fa-book-open"></i></span> {{ appbuilder.app_name }}</a>
+  <ul class="menu"><li><a href="/catalogo/" class="activo">Catálogo</a></li></ul>
+  <div class="usuario" style="margin-left:auto;">
+    {% if current_user.is_anonymous %}
+      <a href="/login/">Ingresar al sistema</a>
+    {% else %}
+      <a href="/">Ir al panel</a>
+    {% endif %}
+  </div>
+</header>

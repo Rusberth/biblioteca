@@ -2,7 +2,7 @@
 
 {% block content %}
 <style>
-  .barra { background:#0d6efd; height:18px; border-radius:3px; }
+  .barra { background:var(--azul); height:16px; border-radius:2px; }
   .fila-barra { display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:13px; }
   .fila-barra .etq { width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   @media print {
@@ -11,7 +11,7 @@
   }
 </style>
 <div class="container">
-  <h3>{{ titulo }}</h3>
+  <h3 class="titulo">{{ titulo }}</h3>
   <p class="text-muted">{{ descripcion }}</p>
 
   <form method="get" class="well no-imprimir" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">

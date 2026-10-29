@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carnet – {{ socio.nombre }}</title>
+  <link href="{{ url_for('appbuilder.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/biblioteca.css') }}" rel="stylesheet">
+</head>
+<body>
+  <div class="carnet-wrap">
+    <div class="carnet">
+      <div class="cab"><b>{{ appbuilder.app_name }}</b><span>Carnet de socio</span></div>
+      <div class="cuerpo">
+        <div class="nombre">{{ socio.nombre }}</div>
+        <div class="fila"><span>Cédula de identidad</span><span class="mono">{{ socio.ci }}</span></div>
+        <div class="fila"><span>Socio desde</span><span class="mono">{{ socio.fecha_registro.strftime('%d/%m/%Y') }}</span></div>
+        <div class="fila"><span>Estado</span><span>{{ 'Activo' if socio.activo else 'Inactivo' }}</span></div>
+        <div class="codigo">N.º {{ '%06d' % socio.id }}</div>
+      </div>
+    </div>
+    <div class="no-print">
+      <button class="btn btn-primary" onclick="window.print()">Imprimir carnet</button>
+      <a class="btn btn-default" href="/socioview/list/">Volver a socios</a>
+    </div>
+  </div>
+</body>
+</html>

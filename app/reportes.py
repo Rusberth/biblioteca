@@ -17,7 +17,7 @@ from sqlalchemy import case, func
 from .extensions import appbuilder, db
 from .models import Autor, Categoria, Libro, Multa, Prestamo, Socio
 
-MULTA_POR_DIA = 1  # Bs por día (igual que en views.py)
+from .servicios import MULTA_POR_DIA  # noqa: E402
 
 
 def _fecha(texto):
@@ -112,7 +112,7 @@ class ReportesView(BaseView):
         for p in prestamos:
             retraso = (hoy - p.fecha_limite).days
             filas.append([p.socio.nombre, p.socio.ci, p.libro.titulo, p.fecha_limite.strftime("%d/%m/%Y"),
-                          retraso, f"{retraso * MULTA_POR_DIA:.2f}"])
+                          retraso, f"{retraso * float(MULTA_POR_DIA):.2f}"])
         barras = [(f"{f[0]} – {f[2]}", f[4]) for f in filas[:10]]
         filtros = [
             {"name": "socio", "label": "Socio (nombre o CI)", "type": "text", "value": texto},

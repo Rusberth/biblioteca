@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ libro.titulo }} – {{ appbuilder.app_name }}</title>
+  <link href="{{ url_for('appbuilder.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/fontawesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/solid.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('appbuilder.static', filename='css/fontawesome/v4-shims.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/biblioteca.css') }}" rel="stylesheet">
+</head>
+<body class="publico">
+  {% include "_publico_top.html" %}
+  {% from "_macros.html" import portada %}
+  <main class="contenedor">
+    <p><a href="javascript:history.back()">‹ Volver al catálogo</a></p>
+    <article class="detalle">
+      <div>{{ portada(libro, "grande") }}</div>
+      <div>
+        <h1>{{ libro.titulo }}</h1>
+        <div class="autor">de {{ libro.autor.nombre }}{% if libro.autor.nacionalidad %} ({{ libro.autor.nacionalidad }}){% endif %}</div>
+        <table class="ficha">
+          <tr><th>Categoría</th><td><span class="dot c{{ libro.categoria_id % 8 }}"></span>{{ libro.categoria.nombre }}</td></tr>
+          <tr><th>Año</th><td>{{ libro.anio_publicacion or 'Sin dato' }}</td></tr>
+          <tr><th>ISBN</th><td class="mono">{{ libro.isbn }}</td></tr>
+          <tr><th>Ejemplares</th><td>{{ libro.ejemplares_total }} en total</td></tr>
+        </table>
+      </div>
+      <aside class="lateral-detalle">
+        <h5>Disponibilidad</h5>
+        {% if libro.ejemplares_disponibles > 0 %}
+          <span class="chip chip-ok estado-grande">Disponible</span>
+          <p style="margin-top:10px;">Quedan <b>{{ libro.ejemplares_disponibles }}</b> de {{ libro.ejemplares_total }} ejemplares.
+            Pídelo en el mostrador con tu carnet.</p>
+        {% else %}
+          <span class="chip chip-bad estado-grande">Sin ejemplares</span>
+          <p style="margin-top:10px;">Todos los ejemplares están prestados. Consulta en el mostrador cuándo vuelve.</p>
+        {% endif %}
+      </aside>
+    </article>
+  </main>
+</body>
+</html>

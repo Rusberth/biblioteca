@@ -1,0 +1,9 @@
+{# Portada generada: el color de la tela depende de la categoría #}
+{% macro portada(libro, clase="") %}
+  <div class="portada c{{ (libro.categoria_id or 0) % 8 }} {{ clase }}" role="img"
+       aria-label="Portada de {{ libro.titulo }}">
+    <span class="p-autor">{{ libro.autor.nombre }}</span>
+    <span class="p-titulo">{{ libro.titulo }}</span>
+    <span class="p-cat">{{ libro.categoria.nombre }}</span>
+  </div>
+{% endmacro %}

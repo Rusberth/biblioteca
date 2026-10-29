@@ -55,4 +55,10 @@ with app.app_context():
                                                   "Préstamos vencidos", "Multas por socio"):
             sm.add_permission_role(biblio, pv)
 
+    # Mostrador, carnet, acciones extra (pagar multa, ver carnet): Bibliotecario
+    VISTAS_BIBLIO = {"MostradorView", "Mostrador", "CarnetView", "SocioView", "MultaView", "PrestamoView"}
+    for pv in sm.session.query(sm.permissionview_model).all():
+        if pv.view_menu and pv.view_menu.name in VISTAS_BIBLIO and pv.permission.name != "can_download":
+            sm.add_permission_role(biblio, pv)
+
     print("Roles listos:", ", ".join(r.name for r in sm.get_all_roles()))
