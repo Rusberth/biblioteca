@@ -7,7 +7,7 @@
     Ejemplo: «¿Tienen libros de ciencia?» o «¿Hay algo de García Márquez?»</p>
 
   <div id="chat" style="height: 380px; overflow-y: auto; border: 1px solid #ddd;
-       border-radius: 6px; padding: 12px; background: #fafafa;"></div>
+       border-radius: 4px; padding: 12px; background: #fff;"></div>
 
   <form id="form" class="d-flex" style="margin-top: 12px; gap: 8px; display: flex;">
     <input id="mensaje" class="form-control" maxlength="500" autocomplete="off"
@@ -43,8 +43,8 @@
     div.style.cssText = "margin-bottom:10px; white-space:pre-wrap;" +
       (rol === "user" ? "text-align:right;" : "");
     const burbuja = document.createElement("span");
-    burbuja.style.cssText = "display:inline-block; padding:8px 12px; border-radius:12px; max-width:85%; text-align:left;" +
-      (rol === "user" ? "background:#0d6efd; color:#fff;" : "background:#e9ecef;");
+    burbuja.style.cssText = "display:inline-block; padding:8px 12px; border-radius:4px; max-width:85%; text-align:left;" +
+      (rol === "user" ? "background:var(--azul); color:#fff;" : "background:#e3e9f1;");
     escribir(burbuja, texto);
     div.appendChild(burbuja);
     chat.appendChild(div);

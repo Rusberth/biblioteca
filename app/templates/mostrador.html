@@ -1,0 +1,127 @@
+{% extends "appbuilder/base.html" %}
+
+{% block content %}
+<div class="page-head">
+  <div><h2>Mostrador</h2><p>Busca al socio por su CI y presta o devuelve libros en una sola pantalla.</p></div>
+</div>
+
+<div id="aviso" class="m-aviso"></div>
+
+<div class="mostrador">
+  <div class="box">
+    <h4>Socio</h4><div class="box-c">
+    <form id="f-socio" style="display:flex; gap:8px;">
+      <input id="ci" class="form-control" placeholder="CI del socio" autocomplete="off" autofocus>
+      <button class="btn btn-primary" type="submit">Buscar</button>
+    </form>
+    <div id="socio-info" style="margin-top:14px;"></div>
+  </div></div>
+
+  <div class="box">
+    <h4>Libro</h4><div class="box-c">
+    <input id="q" class="form-control" placeholder="Título, autor o ISBN (mín. 2 letras)" autocomplete="off">
+    <div id="libros"></div>
+  </div></div>
+</div>
+
+<script>
+  const csrf = "{{ csrf_token_valor }}";
+  let socio = null;
+  const $ = (id) => document.getElementById(id);
+
+  function aviso(texto, tipo) {
+    const a = $("aviso");
+    a.textContent = texto;
+    a.className = "m-aviso " + tipo;
+  }
+  function el(tag, texto, clase) {
+    const e = document.createElement(tag);
+    if (texto !== undefined) e.textContent = texto;
+    if (clase) e.className = clase;
+    return e;
+  }
+  async function api(url, cuerpo) {
+    const opciones = cuerpo ? {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-CSRFToken": csrf},
+      body: JSON.stringify(cuerpo)} : {};
+    const r = await fetch(url, opciones);
+    const datos = await r.json();
+    if (!r.ok) throw new Error(datos.error || "Error del servidor");
+    return datos;
+  }
+
+  function pintarSocio() {
+    const caja = $("socio-info");
+    caja.textContent = "";
+    if (!socio) return;
+    caja.appendChild(el("div", socio.nombre, "h4"));
+    caja.lastChild.style.cssText = "font-weight:700; font-size:17px;";
+    caja.appendChild(el("div", "CI " + socio.ci + (socio.activo ? "" : " · INACTIVO"), "text-muted"));
+    if (socio.multas > 0) {
+      const m = el("div", "Multas pendientes: Bs " + socio.multas.toFixed(2), "chip chip-bad");
+      m.style.marginTop = "8px";
+      caja.appendChild(m);
+    }
+    caja.appendChild(el("h5", "Préstamos activos (" + socio.prestamos.length + ")"));
+    caja.lastChild.style.marginTop = "16px";
+    if (!socio.prestamos.length) caja.appendChild(el("div", "Sin préstamos activos.", "text-muted"));
+    socio.prestamos.forEach((p) => {
+      const fila = el("div", "", "m-resultado");
+      const txt = el("div");
+      txt.appendChild(el("strong", p.libro));
+      txt.appendChild(el("div", "Límite: " + p.limite + (p.vencido ? " · vencido hace " + p.dias + " día(s)" : ""),
+                         p.vencido ? "text-danger" : "text-muted"));
+      const b = el("button", "Devolver", "btn btn-success btn-sm");
+      b.type = "button";
+      b.addEventListener("click", async () => {
+        try { aviso((await api("{{ url_for('MostradorView.devolver') }}", {prestamo_id: p.id})).ok, "ok"); }
+        catch (e) { aviso(e.message, "error"); }
+        await buscarSocio(socio.ci, true);
+        buscarLibros();
+      });
+      fila.append(txt, b);
+      caja.appendChild(fila);
+    });
+  }
+
+  async function buscarSocio(ci, silencioso) {
+    try {
+      socio = await api("{{ url_for('MostradorView.socio') }}?ci=" + encodeURIComponent(ci));
+      if (!silencioso) aviso("", "");
+    } catch (e) { socio = null; aviso(e.message, "error"); }
+    pintarSocio();
+  }
+
+  async function buscarLibros() {
+    const caja = $("libros");
+    caja.textContent = "";
+    const texto = $("q").value.trim();
+    if (texto.length < 2) return;
+    const lista = await api("{{ url_for('MostradorView.libros') }}?q=" + encodeURIComponent(texto));
+    if (!lista.length) caja.appendChild(el("div", "Sin resultados.", "text-muted"));
+    lista.forEach((l) => {
+      const fila = el("div", "", "m-resultado");
+      const txt = el("div");
+      txt.appendChild(el("strong", l.titulo));
+      txt.appendChild(el("div", l.autor + " · " + l.disponibles + " disponible(s)", "text-muted"));
+      const b = el("button", "Prestar", "btn btn-primary btn-sm");
+      b.type = "button";
+      b.disabled = l.disponibles <= 0;
+      b.addEventListener("click", async () => {
+        if (!socio) { aviso("Primero busca al socio por su CI.", "error"); return; }
+        try { aviso((await api("{{ url_for('MostradorView.prestar') }}", {libro_id: l.id, socio_id: socio.id})).ok, "ok"); }
+        catch (e) { aviso(e.message, "error"); }
+        await buscarSocio(socio.ci, true);
+        buscarLibros();
+      });
+      fila.append(txt, b);
+      caja.appendChild(fila);
+    });
+  }
+
+  $("f-socio").addEventListener("submit", (e) => { e.preventDefault(); buscarSocio($("ci").value.trim()); });
+  let espera;
+  $("q").addEventListener("input", () => { clearTimeout(espera); espera = setTimeout(buscarLibros, 250); });
+</script>
+{% endblock %}

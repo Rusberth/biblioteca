@@ -61,3 +61,6 @@ AI_PROVIDER = os.getenv("API_PROVIDER", "groq")
 AI_API_KEY = os.getenv("AI_API_KEY", "")
 AI_MODEL = os.getenv("AI_MODEL", "openai/gpt-oss-20b")
 AI_URL = os.getenv("AI_URL", "https://api.groq.com/openai/v1")
+
+# Panel de inicio propio (app/dashboard.py)
+FAB_INDEX_VIEW = "app.dashboard.PanelView"

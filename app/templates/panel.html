@@ -1,0 +1,111 @@
+{% extends "appbuilder/base.html" %}
+{% from "_macros.html" import portada %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Panel de la biblioteca</h2>
+    <p>Bienvenido, {{ g.user.first_name or g.user.username }}. Estado al día de hoy.</p>
+  </div>
+  <div class="quick">
+    {% if d.ver_socios %}
+      <a href="/mostrador/"><i class="fa fa-cash-register"></i> Prestar o devolver</a>
+      <a class="sec" href="/socioview/add"><i class="fa fa-user-plus"></i> Nuevo socio</a>
+    {% endif %}
+    <a class="sec" href="/asistentebiblioteca/chat/"><i class="fa fa-comments"></i> Asistente IA</a>
+  </div>
+</div>
+
+<div class="panel-grid">
+  <div>
+    {% if d.ver_socios %}
+      <div class="box">
+        <h4>Préstamos recientes</h4>
+        <table class="table table-hover">
+          <thead><tr><th>Libro</th><th>Socio</th><th>Préstamo</th><th>Fecha límite</th><th>Estado</th></tr></thead>
+          <tbody>
+            {% for p in d.recientes %}
+              <tr>
+                <td><div class="celda-libro">
+                  <div class="portada mini c{{ (p.libro.categoria_id or 0) % 8 }}"></div>
+                  <div><div class="t">{{ p.libro.titulo }}</div><div class="a">{{ p.libro.autor.nombre }}</div></div>
+                </div></td>
+                <td>{{ p.socio.nombre }}</td>
+                <td>{{ p.fecha_prestamo.strftime('%d/%m/%Y') }}</td>
+                <td>{{ p.fecha_limite.strftime('%d/%m/%Y') }}</td>
+                <td>
+                  {% if p.estado == 'Devuelto' %}<span class="chip chip-ok">Devuelto</span>
+                  {% elif p.vencido %}<span class="chip chip-bad">Vencido</span>
+                  {% else %}<span class="chip chip-info">Prestado</span>{% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="text-center text-muted">Todavía no hay préstamos. Registra el primero desde el mostrador.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="graficos">
+        <div class="box"><h4>Préstamos por mes</h4><div class="box-c"><canvas id="gMes" height="130"></canvas></div></div>
+        <div class="box"><h4>Préstamos por categoría</h4><div class="box-c"><canvas id="gCat" height="200"></canvas></div></div>
+      </div>
+    {% else %}
+      <div class="box">
+        <h4>Novedades en el catálogo</h4>
+        <div class="box-c libros-grid">
+          {% for l in d.novedades %}
+            <a class="libro" href="/catalogo/libro/{{ l.id }}">{{ portada(l) }}
+              <span class="t">{{ l.titulo }}</span><span class="a">{{ l.autor.nombre }}</span></a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="lado">
+    <div class="kpi"><div class="ico"><i class="fa fa-book"></i></div>
+      <div><div class="num">{{ d.libros }}</div><div class="lbl">Libros en catálogo</div></div></div>
+    <div class="kpi"><div class="ico"><i class="fa fa-check"></i></div>
+      <div><div class="num">{{ d.disponibles }}</div><div class="lbl">Ejemplares disponibles</div></div></div>
+    {% if d.ver_socios %}
+      <div class="kpi"><div class="ico"><i class="fa fa-users"></i></div>
+        <div><div class="num">{{ d.socios }}</div><div class="lbl">Socios activos</div></div></div>
+      <div class="kpi"><div class="ico"><i class="fa fa-right-left"></i></div>
+        <div><div class="num">{{ d.activos }}</div><div class="lbl">Préstamos activos</div></div></div>
+
+      <div class="box">
+        <h4>Avisos importantes</h4>
+        <ul class="avisos">
+          <li><span class="punto rojo"></span><span><b>{{ d.vencidos }}</b> préstamo(s) vencido(s)
+            <br><a href="/reportes/prestamos-vencidos/">Ver el reporte</a></span></li>
+          <li><span class="punto ambar"></span><span><b>{{ d.por_vencer }}</b> vencen en los próximos 3 días</span></li>
+          <li><span class="punto rojo"></span><span>Multas pendientes: <b>Bs {{ '%.2f'|format(d.multas_pendientes) }}</b>
+            <br><a href="/multaview/list/">Cobrar multas</a></span></li>
+          <li><span class="punto ambar"></span><span><b>{{ d.agotados }}</b> libro(s) sin ejemplares disponibles</span></li>
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if d.ver_socios %}
+<script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
+<script>
+  var porMes = {{ d.por_mes | tojson }};
+  var porCat = {{ d.por_categoria | tojson }};
+  var azul = '#1b5aa6';
+  var tela = ['#7b2d34', '#1f3a5f', '#2f5a45', '#a8741f', '#4a5a6b', '#5b3a66', '#1f5f63', '#6a4a35'];
+  Chart.defaults.font.family = '"Public Sans", "Segoe UI", Arial, sans-serif';
+  new Chart(document.getElementById('gMes'), {
+    type: 'bar',
+    data: { labels: porMes.etiquetas, datasets: [{ label: 'Préstamos', data: porMes.valores, backgroundColor: azul, borderRadius: 2 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } }
+  });
+  new Chart(document.getElementById('gCat'), {
+    type: 'bar',
+    data: { labels: porCat.etiquetas, datasets: [{ data: porCat.valores, backgroundColor: porCat.colores.map(function (i) { return tela[i]; }), borderRadius: 2 }] },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } } }
+  });
+</script>
+{% endif %}
+{% endblock %}
