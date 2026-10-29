@@ -27,6 +27,12 @@ Flask AppBuilder + MySQL (XAMPP) + asistente de IA (Groq) + reportes + interfaz 
 Usuarios que crea `datos_prueba.py` (solo para pruebas locales):
 `bibliotecaria / Biblio123*` (Bibliotecario) y `lector / Lector123*` (Consulta).
 
+## Documentación
+- `docs/DOCUMENTACION.md`: descripción completa del sistema.
+- `docs/DER.png`: diagrama entidad-relación.
+- `docs/PRUEBAS.md`: lista de pruebas manuales.
+- `evidencias/`: capturas de pantalla.
+
 ## Ramas
 `main`, `feature/modelos`, `feature/crud-permisos`, `feature/asistente-ia`, `feature/reportes`,
 `feature/interfaz`, `docs/evidencias`

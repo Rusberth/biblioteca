@@ -1,0 +1,60 @@
+erDiagram
+    CATEGORIAS ||--o{ LIBROS : "clasifica"
+    AUTORES ||--o{ LIBROS : "escribe"
+    LIBROS ||--o{ PRESTAMOS : "se presta en"
+    SOCIOS ||--o{ PRESTAMOS : "solicita"
+    AB_USER ||--o{ PRESTAMOS : "registra"
+    PRESTAMOS ||--o{ MULTAS : "genera"
+
+    CATEGORIAS {
+        int id PK
+        string nombre UK
+        string descripcion
+    }
+    AUTORES {
+        int id PK
+        string nombre
+        string nacionalidad
+    }
+    LIBROS {
+        int id PK
+        string titulo
+        string isbn UK
+        int anio_publicacion
+        int categoria_id FK
+        int autor_id FK
+        int ejemplares_total
+        int ejemplares_disponibles
+        boolean activo
+    }
+    SOCIOS {
+        int id PK
+        string nombre
+        string ci UK
+        string email
+        string telefono
+        date fecha_registro
+        boolean activo
+    }
+    PRESTAMOS {
+        int id PK
+        int libro_id FK
+        int socio_id FK
+        int usuario_id FK
+        date fecha_prestamo
+        date fecha_limite
+        date fecha_devolucion
+        string estado
+    }
+    MULTAS {
+        int id PK
+        int prestamo_id FK
+        decimal monto
+        string motivo
+        boolean pagada
+        datetime fecha
+    }
+    AB_USER {
+        int id PK
+        string username
+    }
