@@ -1,0 +1,65 @@
+{% extends "appbuilder/base.html" %}
+
+{% block content %}
+<style>
+  .barra { background:#0d6efd; height:18px; border-radius:3px; }
+  .fila-barra { display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:13px; }
+  .fila-barra .etq { width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @media print {
+    .navbar, .no-imprimir, footer { display:none !important; }
+    .container { width:100% !important; max-width:100% !important; }
+  }
+</style>
+<div class="container">
+  <h3>{{ titulo }}</h3>
+  <p class="text-muted">{{ descripcion }}</p>
+
+  <form method="get" class="well no-imprimir" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+    {% for f in filtros %}
+      <div>
+        <label style="display:block; font-size:12px;">{{ f.label }}</label>
+        {% if f.type == "select" %}
+          <select name="{{ f.name }}" class="form-control">
+            {% for valor, texto in f.options %}
+              <option value="{{ valor }}" {% if valor == f.value %}selected{% endif %}>{{ texto }}</option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input type="{{ f.type }}" name="{{ f.name }}" value="{{ f.value }}" class="form-control"
+                 {% if f.type == "number" %}min="0"{% endif %}>
+        {% endif %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+    <a href="?" class="btn btn-default">Limpiar</a>
+    <a href="?{{ request.query_string.decode() }}{% if request.query_string %}&{% endif %}formato=csv" class="btn btn-success">Exportar CSV</a>
+    <button type="button" class="btn btn-default" onclick="window.print()">Imprimir / PDF</button>
+  </form>
+
+  <p class="text-muted" style="font-size:12px;">Generado el {{ generado }} · {{ filas|length }} fila(s)</p>
+
+  {% if barras %}
+    <div style="margin-bottom:16px;">
+      {% set maximo = (barras | map(attribute=1) | max) or 1 %}
+      {% for etiqueta, valor in barras %}
+        <div class="fila-barra">
+          <div class="etq" title="{{ etiqueta }}">{{ etiqueta }}</div>
+          <div class="barra" style="width: {{ (valor / maximo * 300)|round|int }}px;"></div>
+          <div>{{ valor }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <table class="table table-striped table-bordered">
+    <thead><tr>{% for c in columnas %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for fila in filas %}
+        <tr>{% for celda in fila %}<td>{{ celda }}</td>{% endfor %}</tr>
+      {% else %}
+        <tr><td colspan="{{ columnas|length }}" class="text-center text-muted">Sin resultados para estos filtros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -49,4 +49,10 @@ with app.app_context():
             if pv:
                 sm.add_permission_role(rol, pv)
 
+    # Reportes: solo Bibliotecario (y Admin). Se dan todos los permisos de ReportesView.
+    for pv in sm.session.query(sm.permissionview_model).all():
+        if pv.view_menu and pv.view_menu.name in ("ReportesView", "Reportes", "Libros más prestados",
+                                                  "Préstamos vencidos", "Multas por socio"):
+            sm.add_permission_role(biblio, pv)
+
     print("Roles listos:", ", ".join(r.name for r in sm.get_all_roles()))

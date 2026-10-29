@@ -175,3 +175,6 @@ appbuilder.add_view(MultaView, "Multas", icon="fa-money", category="Circulación
 from .asistente import AsistenteView  # noqa: E402
 
 appbuilder.add_view(AsistenteView, "Asistente IA", icon="fa-comments", category="Asistente")
+
+# Reportes (3 consultas con filtros)
+from . import reportes  # noqa: E402,F401
