@@ -41,4 +41,12 @@ with app.app_context():
     if pv:
         sm.add_permission_role(consulta, pv)
 
+    # Asistente de IA: lo pueden usar Bibliotecario y Consulta
+    for rol in (biblio, consulta):
+        for nombre, vista in [("can_chat", "AsistenteView"), ("can_preguntar", "AsistenteView"),
+                              ("menu_access", "Asistente IA"), ("menu_access", "Asistente")]:
+            pv = sm.find_permission_view_menu(nombre, vista)
+            if pv:
+                sm.add_permission_role(rol, pv)
+
     print("Roles listos:", ", ".join(r.name for r in sm.get_all_roles()))
