@@ -170,3 +170,8 @@ appbuilder.add_view(CategoriaView, "Categorías", icon="fa-folder-open", categor
 appbuilder.add_view(SocioView, "Socios", icon="fa-users", category="Circulación")
 appbuilder.add_view(PrestamoView, "Préstamos", icon="fa-exchange", category="Circulación")
 appbuilder.add_view(MultaView, "Multas", icon="fa-money", category="Circulación")
+
+# El asistente de IA se registra al final para que aparezca en el menú
+from .asistente import AsistenteView  # noqa: E402
+
+appbuilder.add_view(AsistenteView, "Asistente IA", icon="fa-comments", category="Asistente")

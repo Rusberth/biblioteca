@@ -1,0 +1,81 @@
+{% extends "appbuilder/base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 820px;">
+  <h3>Asistente de la biblioteca <small class="text-muted">con IA</small></h3>
+  <p class="text-muted">Pregunta por libros, autores, categorías o disponibilidad.
+    Ejemplo: «¿Tienen libros de ciencia?» o «¿Hay algo de García Márquez?»</p>
+
+  <div id="chat" style="height: 380px; overflow-y: auto; border: 1px solid #ddd;
+       border-radius: 6px; padding: 12px; background: #fafafa;"></div>
+
+  <form id="form" class="d-flex" style="margin-top: 12px; gap: 8px; display: flex;">
+    <input id="mensaje" class="form-control" maxlength="500" autocomplete="off"
+           placeholder="Escribe tu pregunta..." required>
+    <button id="enviar" type="submit" class="btn btn-primary">Enviar</button>
+  </form>
+</div>
+
+<script>
+  const chat = document.getElementById("chat");
+  const form = document.getElementById("form");
+  const input = document.getElementById("mensaje");
+  const boton = document.getElementById("enviar");
+  const csrf = "{{ csrf_token_valor }}";
+  let historico = [];
+
+  // Convierte **negrita** en <strong> sin usar innerHTML (así no se puede inyectar HTML).
+  function escribir(elemento, texto) {
+    elemento.textContent = "";
+    texto.split("**").forEach((trozo, i) => {
+      if (i % 2 === 1) {
+        const b = document.createElement("strong");
+        b.textContent = trozo;
+        elemento.appendChild(b);
+      } else {
+        elemento.appendChild(document.createTextNode(trozo));
+      }
+    });
+  }
+
+  function agregar(rol, texto) {
+    const div = document.createElement("div");
+    div.style.cssText = "margin-bottom:10px; white-space:pre-wrap;" +
+      (rol === "user" ? "text-align:right;" : "");
+    const burbuja = document.createElement("span");
+    burbuja.style.cssText = "display:inline-block; padding:8px 12px; border-radius:12px; max-width:85%; text-align:left;" +
+      (rol === "user" ? "background:#0d6efd; color:#fff;" : "background:#e9ecef;");
+    escribir(burbuja, texto);
+    div.appendChild(burbuja);
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return burbuja;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const texto = input.value.trim();
+    if (!texto) return;
+    agregar("user", texto);
+    input.value = "";
+    boton.disabled = true;
+    const espera = agregar("assistant", "Pensando...");
+    try {
+      const r = await fetch("{{ url_for('AsistenteView.preguntar') }}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-CSRFToken": csrf},
+        body: JSON.stringify({mensaje: texto, historico: historico}),
+      });
+      const datos = await r.json();
+      if (!r.ok) throw new Error(datos.error || "Error del servidor");
+      escribir(espera, datos.respuesta);
+      historico.push({role: "user", content: texto}, {role: "assistant", content: datos.respuesta});
+    } catch (err) {
+      espera.textContent = "⚠ " + err.message;
+    } finally {
+      boton.disabled = false;
+      input.focus();
+    }
+  });
+</script>
+{% endblock %}
