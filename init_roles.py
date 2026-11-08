@@ -61,4 +61,25 @@ with app.app_context():
         if pv.view_menu and pv.view_menu.name in VISTAS_BIBLIO and pv.permission.name != "can_download":
             sm.add_permission_role(biblio, pv)
 
+    # Entradas del menú (el permiso menu_access usa el nombre visible del menú)
+    MENUS_CATALOGO = ["Libros", "Autores", "Categorías"]
+    MENUS_CIRCULACION = ["Socios", "Préstamos", "Multas"]
+    for rol, menus in ((biblio, MENUS_CATALOGO + MENUS_CIRCULACION), (consulta, MENUS_CATALOGO)):
+        for nombre in menus:
+            pv = sm.find_permission_view_menu("menu_access", nombre)
+            if pv:
+                sm.add_permission_role(rol, pv)
+
+    # Perfil propio: ver datos, editarlos y cambiar la contraseña
+    for rol in (biblio, consulta):
+        for nombre, vista in [("can_userinfo", "UserDBModelView"),
+                              ("can_this_form_get", "UserInfoEditView"),
+                              ("can_this_form_post", "UserInfoEditView"),
+                              ("can_this_form_get", "ResetMyPasswordView"),
+                              ("can_this_form_post", "ResetMyPasswordView"),
+                              ("userinfo", "UserDBModelView")]:
+            pv = sm.find_permission_view_menu(nombre, vista)
+            if pv:
+                sm.add_permission_role(rol, pv)
+
     print("Roles listos:", ", ".join(r.name for r in sm.get_all_roles()))
