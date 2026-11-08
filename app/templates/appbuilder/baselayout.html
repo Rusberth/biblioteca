@@ -82,6 +82,24 @@
         categoriaview: 'Agregar categoría', socioview: 'Agregar socio',
         prestamoview: 'Registrar préstamo', multaview: 'Agregar multa'
       };
+      /* Ventana de confirmación al eliminar: textos en español */
+      var t = document.getElementById('myModalLabel');
+      if (t) t.textContent = 'Confirmación necesaria';
+      var c = document.querySelector('#modal-confirm .btn-default');
+      if (c) c.textContent = 'Cancelar';
+      var ok = document.getElementById('modal-confirm-ok');
+      if (ok) ok.textContent = 'Aceptar';
+      var oa = document.querySelector('#modal-alert .btn-default');
+      if (oa) oa.textContent = 'Aceptar';
+      window.addEventListener('load', function () {
+        if (!window.jQuery) return;
+        jQuery('#modal-confirm').on('show.bs.modal', function () {
+          var cuerpo = jQuery('#modal-confirm .modal-body');
+          if (cuerpo.text().indexOf('delete this item') !== -1) {
+            cuerpo.text('¿Seguro que quieres eliminar este registro? Esta acción no se puede deshacer.');
+          }
+        });
+      });
       document.querySelectorAll('a.btn-primary[href*="/add"]').forEach(function (a) {
         var m = a.getAttribute('href').match(/\/([a-z]+)\/add(\/|\?|$)/);
         if (!m || !etiquetas[m[1]] || !a.querySelector('.fa-plus')) return;
