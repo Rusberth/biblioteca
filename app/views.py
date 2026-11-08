@@ -13,7 +13,21 @@ def si_no(valor):
     return "Sí" if valor else "No"
 
 
-class CategoriaView(ModelView):
+class ProtegeBorrado:
+    """Impide eliminar un registro que tiene datos relacionados y explica el motivo."""
+    relaciones_protegidas = ()  # (atributo, nombre en español)
+
+    def pre_delete(self, item):
+        for atributo, nombre in self.relaciones_protegidas:
+            cantidad = len(getattr(item, atributo))
+            if cantidad:
+                raise Exception(
+                    f"No se puede eliminar: tiene {cantidad} {nombre} relacionado(s). "
+                    "Se conserva para no perder el historial.")
+
+
+class CategoriaView(ProtegeBorrado, ModelView):
+    relaciones_protegidas = (("libros", "libros"),)
     datamodel = SQLAInterface(Categoria)
     list_title = "Lista de categorías"
     show_title = "Detalle de la categoría"
@@ -26,7 +40,8 @@ class CategoriaView(ModelView):
     base_order = ("nombre", "asc")
 
 
-class AutorView(ModelView):
+class AutorView(ProtegeBorrado, ModelView):
+    relaciones_protegidas = (("libros", "libros"),)
     datamodel = SQLAInterface(Autor)
     list_title = "Lista de autores"
     show_title = "Detalle del autor"
@@ -39,7 +54,8 @@ class AutorView(ModelView):
     base_order = ("nombre", "asc")
 
 
-class LibroView(ModelView):
+class LibroView(ProtegeBorrado, ModelView):
+    relaciones_protegidas = (("prestamos", "préstamos"),)
     datamodel = SQLAInterface(Libro)
     list_title = "Catálogo de libros"
     show_title = "Detalle del libro"
@@ -65,7 +81,8 @@ class LibroView(ModelView):
     }
 
 
-class SocioView(ModelView):
+class SocioView(ProtegeBorrado, ModelView):
+    relaciones_protegidas = (("prestamos", "préstamos"),)
     datamodel = SQLAInterface(Socio)
     list_title = "Lista de socios"
     show_title = "Detalle del socio"
@@ -86,7 +103,8 @@ class SocioView(ModelView):
         return redirect(url_for("CarnetView.carnet", pk=item.id))
 
 
-class PrestamoView(ModelView):
+class PrestamoView(ProtegeBorrado, ModelView):
+    relaciones_protegidas = (("multas", "multas"),)
     datamodel = SQLAInterface(Prestamo)
     list_title = "Lista de préstamos"
     show_title = "Detalle del préstamo"
