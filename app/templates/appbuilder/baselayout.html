@@ -74,4 +74,20 @@
     var b = document.getElementById('abrir-menu');
     if (b) b.addEventListener('click', function () { document.getElementById('topbar').classList.toggle('abierta'); });
   </script>
+  <script nonce="{{ baselib.get_nonce() }}">
+    /* Botón "+" de las listas: se reemplaza por un texto claro */
+    (function () {
+      var etiquetas = {
+        libroview: 'Agregar libro', autorview: 'Agregar autor',
+        categoriaview: 'Agregar categoría', socioview: 'Agregar socio',
+        prestamoview: 'Registrar préstamo', multaview: 'Agregar multa'
+      };
+      document.querySelectorAll('a.btn-primary[href*="/add"]').forEach(function (a) {
+        var m = a.getAttribute('href').match(/\/([a-z]+)\/add(\/|\?|$)/);
+        if (!m || !etiquetas[m[1]] || !a.querySelector('.fa-plus')) return;
+        a.innerHTML = '<i class="fa fa-plus"></i> ' + etiquetas[m[1]];
+        a.title = etiquetas[m[1]];
+      });
+    })();
+  </script>
 {% endblock %}
